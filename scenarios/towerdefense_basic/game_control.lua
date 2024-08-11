@@ -140,6 +140,7 @@ GameControl.game_constants = {
         "batteries",
         "laser",
         "battery",
+        "fast-inserter",
         "stack-inserter",
         "laser-turret",
         "modules",
@@ -912,7 +913,7 @@ Event.register(defines.events.on_pre_build, function(event)
     if not game_control or game_control.ended then return end
     if not game_control.lane_marker_surface then return end
     if game_control.lane_marker_surface.get_tile(event.position.x, event.position.y).name == "out-of-map" then
-        local success = player.clean_cursor()
+        local success = player.clear_cursor()
         if success then 
             player.print("Cannot build here.")
             player.play_sound{path="utility/cannot_build"}
@@ -923,7 +924,7 @@ Event.register(defines.events.on_pre_build, function(event)
             inventory.remove(stack)
             player.print("Cannot build here. As a penalty for trying we have removed " .. stack.count .. " " .. stack.name .. " from your inventory.")
             player.play_sound{path="utility/cannot_build"}            
-            player.clean_cursor()
+            player.clear_cursor()
         end
     end
 end)
