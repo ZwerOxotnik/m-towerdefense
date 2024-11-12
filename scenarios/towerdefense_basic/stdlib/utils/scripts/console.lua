@@ -65,7 +65,7 @@ local function enter(event)
     if not ok then
         p.print(err)
     end
-    game.write_file(prefix .. '/console.log', s .. '\n', true, p.index)
+    helpers.write_file(prefix .. '/console.log', s .. '\n', true, p.index)
 end
 Gui.on_click('^' .. names.enter .. '$', enter)
 

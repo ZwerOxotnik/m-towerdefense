@@ -36,16 +36,16 @@ end
 -- Globals
 -------------------------------------------------------------------------------
 
-global.UpgradeSystem = global.UpgradeSystem or {
+storage.UpgradeSystem = storage.UpgradeSystem or {
     upgrade_systems_by_force = {}
 }
 
 function UpgradeSystem.get_force_upgrade_system(force)
-    return global.UpgradeSystem.upgrade_systems_by_force[force.name]
+    return storage.UpgradeSystem.upgrade_systems_by_force[force.name]
 end
 
 function UpgradeSystem.get_player_upgrade_system(player)
-    return global.UpgradeSystem.upgrade_systems_by_force[player.force.name]
+    return storage.UpgradeSystem.upgrade_systems_by_force[player.force.name]
 end
 
 
@@ -121,7 +121,7 @@ function UpgradeSystem.add_upgrade_to_ui(upgrade, player)
     cost_label.style.height = 30
     cost_label.style.width = 30
     cost_label.style.top_padding = 0
-    --local cost_label = upgrade_table.add{type="button", style="recipe_slot_button", caption=upgrade.cost, name="upgrade_cost_" .. name}
+    --local cost_label = upgrade_table.add{type="button", style="slot_button", caption=upgrade.cost, name="upgrade_cost_" .. name}
     cost_label.style.font_color = UpgradeSystem.artifact_color
     cost_label.style.font = "default-bold"
     parent.add{type="sprite", name="upgrade_sprite_" .. name, sprite=upgrade.icon}
@@ -147,7 +147,12 @@ function UpgradeSystem.give_money(force, amount, surface, positions)
             else
                 text = "-" .. amount
             end
-            surface.create_entity{name = "flying-text", position = position, text = text, color = UpgradeSystem.artifact_color}    
+            rendering.draw_text({
+                surface = surface,
+                target  = position,
+                color = UpgradeSystem.artifact_color,
+                text = text,
+            })
         end
     end
 
@@ -180,7 +185,7 @@ function UpgradeSystem.purchase_upgrade(upgrade_key, buying_player)
     else
         local error
         if upgrade.action then 
-            error = upgrade.action(global.game_control, upgrade) 
+            error = upgrade.action(storage.game_control, upgrade) 
         end
         if not error and upgrade.unlock then
             local unlock = upgrade.unlock
@@ -207,9 +212,14 @@ function UpgradeSystem.purchase_upgrade(upgrade_key, buying_player)
             upgrade_system.force.play_sound{path="utility/research_completed", }        
             upgrade_system.force.print("Purchased: " .. formatted_upgrade_name(upgrade))
 
-            for _, player in pairs(upgrade_system.force.players) do
+            for _, player in pairs(upgrade_system.force.connected_players) do
                 if player.character then
-                    player.surface.create_entity{name = "flying-text", position = player.position, text = "Purchased: " .. formatted_upgrade_name(upgrade), color={r=0.2, g=1, b=0.3}}
+                    player.create_local_flying_text({
+                        position = player.position,
+                        text = "Purchased: " .. formatted_upgrade_name(upgrade),
+                        color={r=0.2, g=1, b=0.3},
+                        time_to_live = 140,
+                    })
                 end
             end
             
@@ -316,12 +326,12 @@ function UpgradeSystem.init(upgrades, force, money)
             upgrade.disabled = true
         end
     end
-    global.UpgradeSystem.upgrade_systems_by_force[force.name] = upgrade_system
+    storage.UpgradeSystem.upgrade_systems_by_force[force.name] = upgrade_system
     return upgrade_system
 end
 
 function UpgradeSystem.destroy(force)
-    global.UpgradeSystem.upgrade_systems_by_force[force.name] = nil
+    storage.UpgradeSystem.upgrade_systems_by_force[force.name] = nil
     for _, player in pairs(force.players) do
         UpgradeSystem.destroy_ui(player)
     end

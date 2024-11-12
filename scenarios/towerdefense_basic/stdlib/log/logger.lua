@@ -108,7 +108,7 @@ function M.new(mod_name, log_name, debug_mode, options)
     function Logger.write()
         if _G.game then
             Logger.last_written = game.tick
-            game.write_file(Logger.file_name, table.concat(Logger.buffer), Logger.ever_written)
+            helpers.write_file(Logger.file_name, table.concat(Logger.buffer), Logger.ever_written)
             Logger.buffer = {}
             Logger.ever_written = true
             return true

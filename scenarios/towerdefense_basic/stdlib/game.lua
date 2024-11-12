@@ -55,7 +55,7 @@ end
 
 --- Messages all players currently connected to the game.
 --> Offline players are not counted as having received the message.
--- If no players exist msg is stored in the `global._print_queue` table.
+-- If no players exist msg is stored in the `storage._print_queue` table.
 -- @tparam string msg the message to send to players
 -- @tparam[opt] ?|nil|boolean condition the condition to be true for a player to be messaged
 -- @treturn uint the number of players who received the message.
@@ -70,8 +70,8 @@ function Game.print_all(msg, condition)
         end
         return num
     else
-        global._print_queue = global._print_queue or {}
-        global._print_queue[#global._print_queue + 1] = msg
+        storage._print_queue = storage._print_queue or {}
+        storage._print_queue[#storage._print_queue + 1] = msg
     end
 end
 
@@ -84,13 +84,13 @@ end
 -- @treturn mixed the chunk value stored at the key or the previous value
 function Game.get_or_set_data(sub_table, index, key, set, value)
     Is.Assert.String(sub_table, 'sub_table must be a string')
-    global[sub_table] = global[sub_table] or {}
+    storage[sub_table] = storage[sub_table] or {}
     local this
     if index then
-        global[sub_table][index] = global[sub_table][index] or {}
-        this = global[sub_table][index]
+        storage[sub_table][index] = storage[sub_table][index] or {}
+        this = storage[sub_table][index]
     else
-        this = global[sub_table]
+        this = storage[sub_table]
     end
     local previous
 

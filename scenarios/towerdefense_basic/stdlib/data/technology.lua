@@ -56,7 +56,7 @@ function Technology:add_effect(effect, unlock_type)
     --todo fix for non recipe types
     local add_unlock =
         function(technology, name)
-        local effects = technology.effects
+        local effects = technology.prototype.effects
         effects[#effects + 1] = {
             type = unlock_type,
             recipe = name
@@ -96,17 +96,17 @@ function Technology:remove_effect(tech_name, unlock_type, name)
         if tech_name then
             local tech = Technology(tech_name)
             if tech:valid() then
-                for index, effect in pairs(tech.effects or {}) do
+                for index, effect in pairs(tech.prototype.effects or {}) do
                     if effect.type == 'unlock-recipe' and effect.recipe == self.name then
-                        table.remove(tech.effects, index)
+                        table.remove(tech.prototype.effects, index)
                     end
                 end
             end
         else
             for _, tech in pairs(data.raw['technology']) do
-                for index, effect in pairs(tech.effects or {}) do
+                for index, effect in pairs(tech.prototype.effects or {}) do
                     if effect.type == 'unlock-recipe' and effect.recipe == self.name then
-                        table.remove(tech.effects, index)
+                        table.remove(tech.prototype.effects, index)
                     end
                 end
             end

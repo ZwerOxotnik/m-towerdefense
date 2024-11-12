@@ -10,6 +10,9 @@ local S = "__m-towerdefense__"
 local entity, item, recipe = ProtUtils.new_entity("rocket-turret", "gun-turret", "ammo-turret")
 
 
+entity.circuit_connector = nil -- TODO: fix!
+
+
 -- Prepare Entity
 local function rocket_turret_extension(inputs)
   return
@@ -135,10 +138,10 @@ Table.merge_into_first{recipe,
     energy_required = 15,
     ingredients =
     {
-      {"iron-gear-wheel", 10},
-      {"copper-plate", 20},
-      {"steel-plate", 15},
-      {"advanced-circuit", 10},
+      {type = "item", name = "iron-gear-wheel",  amount = 10},
+      {type = "item", name = "copper-plate",     amount = 20},
+      {type = "item", name = "steel-plate",      amount = 15},
+      {type = "item", name = "advanced-circuit", amount = 10},
     },
   },
 }

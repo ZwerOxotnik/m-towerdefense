@@ -90,7 +90,7 @@ local cfg = require("cfg")
 -- /c 
 -- local t = {}
 -- for _, ent in pairs(game.player.surface.find_entities_filtered{name="centrifuge"}) do table.insert(t, ent.position) end
--- game.write_file("buffers.txt", serpent.line(t))
+-- helpers.write_file("buffers.txt", serpent.line(t))
 
 -- Remove a few buttons
 -- /c game.player.gui.top.mod_gui_button_flow["creative-mode-fix_main-menu-open-button"].destroy(); game.player.gui.top.mod_gui_button_flow.silo_gui_sprite_button.destroy()
@@ -219,7 +219,7 @@ System.constants = {
         defines.input_action.set_behavior_mode,
         defines.input_action.set_car_weapons_control,
         defines.input_action.set_circuit_condition,
-        defines.input_action.set_circuit_mode_of_operation,
+        defines.input_action.set_circuit_exclusive_mode_of_operation,
         -- defines.input_action.set_deconstruction_item_tile_selection_mode,
         -- defines.input_action.set_deconstruction_item_trees_and_rocks_only,
         defines.input_action.set_entity_color,
@@ -259,7 +259,7 @@ System.constants = {
         defines.input_action.toggle_enable_vehicle_logistics_while_moving,
         defines.input_action.toggle_show_entity_info,
         defines.input_action.use_ability,
-        defines.input_action.use_artillery_remote,
+        -- defines.input_action.use_artillery_remote,-- TODO: recheck and fix!
         defines.input_action.use_item,
         defines.input_action.wire_dragging,
         -- defines.input_action.write_to_console,
@@ -272,7 +272,7 @@ System.constants = {
 
 Event.register(defines.events.on_player_joined_game, function(event)
     local player = game.players[event.player_index]
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if game_control then
         GameControl.player_enter_game(game_control, player)
     else
@@ -282,14 +282,14 @@ end)
 
 
 function System.move_player_to_lobby(player)
-    if not global.system then System.init() end
-    local pos = System.constants.lobby_positions[global.system.lobby_position_index]
-    player.teleport(pos, global.system.lobby_surface)
+    if not storage.system then System.init() end
+    local pos = System.constants.lobby_positions[storage.system.lobby_position_index]
+    player.teleport(pos, storage.system.lobby_surface)
     if player.character and player.character.valid then 
         player.character.destroy()
     end
 
-    global.system.observer_permission_group.add_player(player)
+    storage.system.observer_permission_group.add_player(player)
 
     player.minimap_enabled = false
     player.zoom = 1
@@ -334,9 +334,9 @@ Event.register(VoteUI.on_vote_finished, function(event)
 
     local difficulty_settings = event.option
 
-    local system = global.system
+    local system = storage.system
 
-    global.game_control = {
+    storage.game_control = {
         player_force = system.player_force,
         enemy_force = system.enemy_force,
         wave_force = system.wave_force,
@@ -352,7 +352,7 @@ Event.register(VoteUI.on_vote_finished, function(event)
         -- artillery_turret = nil
     }
 
-    GameControl.restart(global.game_control, difficulty_settings)
+    GameControl.restart(storage.game_control, difficulty_settings)
 end)
 
 
@@ -390,11 +390,11 @@ function System.init()
         -- lobby_position_index = 1,
     }
 
-    global.system = system
+    storage.system = system
 
     -- Init Lobby
     System.prepare_lobby_surface(lobby_surface)
-    global.system.lobby_position_index = math.random(#System.constants.lobby_positions)
+    storage.system.lobby_position_index = math.random(#System.constants.lobby_positions)
 
     for _, player in pairs(game.players) do
         System.move_player_to_lobby(player)
@@ -412,18 +412,18 @@ end
 
 
 Event.register(-10, function() 
-    if not global.system then 
+    if not storage.system then 
         System.init()
-    elseif global.system.game_destroy_tick and global.system.game_destroy_tick < game.tick then
+    elseif storage.system.game_destroy_tick and storage.system.game_destroy_tick < game.tick then
         System.end_game()
     end
 end)
 
 
 Event.register(GameControl.on_game_ended, function()
-    global.system.game_destroy_tick = game.tick + System.constants.game_destroy_delay
-    for _, player in pairs(global.system.player_force.players) do
-        global.system.observer_permission_group.add_player(player)        
+    storage.system.game_destroy_tick = game.tick + System.constants.game_destroy_delay
+    for _, player in pairs(storage.system.player_force.players) do
+        storage.system.observer_permission_group.add_player(player)        
     end
 
     game.print("The game will automatically restart in a minute.")
@@ -432,12 +432,12 @@ end)
 
 function System.end_game()
     -- Clean up old game
-    GameControl.destroy_game(global.game_control)
+    GameControl.destroy_game(storage.game_control)
     
     -- Move players out of the way
-    global.system.lobby_position_index = math.random(#System.constants.lobby_positions)        
-    global.system.game_destroy_tick = nil
-    for _, player in pairs(global.system.player_force.players) do
+    storage.system.lobby_position_index = math.random(#System.constants.lobby_positions)        
+    storage.system.game_destroy_tick = nil
+    for _, player in pairs(storage.system.player_force.players) do
         System.move_player_to_lobby(player)
     end
 
@@ -446,7 +446,7 @@ function System.end_game()
 end       
 
 function System.start_game_vote()
-    local system = global.system
+    local system = storage.system
     
     local admin_present = false
     for _, player in pairs(system.player_force.players) do
@@ -503,7 +503,7 @@ commands.add_command("startvote", "Start a vote for all players to participate i
         return
     end
 
-    if Table.count_keys(global.VoteUI.votes) >= 1 then 
+    if Table.count_keys(storage.VoteUI.votes) >= 1 then 
         player.print("There is already an active vote!")
         return 
     end
@@ -543,7 +543,7 @@ end)
 commands.add_command("dbg_wv", "Debug Wave Controller", function(event) 
     local player = game.players[event.player_index]
     if not player.admin then return end
-    player.print(serpent.block(global.game_control.wave_control)) 
+    player.print(serpent.block(storage.game_control.wave_control)) 
 end)
 
 commands.add_command("dbg_show_const", "Show Scenario Constants", function(event) 
@@ -559,13 +559,13 @@ commands.add_command("dbg_show_game_globals", "Show Game State", function(event)
     if not player.admin then return end
     local ui = TableGUI.create("Game Globals")
     TableGUI.create_ui(ui, player)
-    TableGUI.add_table(ui, "Game Control", global.game_control)
+    TableGUI.add_table(ui, "Game Control", storage.game_control)
 end)
 
 commands.add_command("dbg_testing", "Cheats! Desyncs in multiplayer.", function(event)
     local player = game.players[event.player_index]
     if not player.admin then return end
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if game_control then
         UpgradeSystem.give_money(game_control.player_force, 1000)
     end

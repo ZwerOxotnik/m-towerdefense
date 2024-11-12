@@ -58,8 +58,8 @@ end
 --     elseif transport_types[entity.type] then
 --         for i=1, transport_types[entity.type] do
 --             local lane = entity.get_transport_line(i)
---             for name, count in pairs(lane.get_contents()) do
---                 local cur_stack = {name=name, count=count, health=1}
+--             for _, item in pairs(lane.get_contents()) do
+--                 local cur_stack = {name=item.name, count=item.count, health=1}
 --                 item_stacks[#item_stacks+1] = cur_stack
 --                 lane.remove_item(cur_stack)
 --             end

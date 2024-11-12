@@ -383,5 +383,5 @@ return Data
 -- "projectile", "smoke", "air-object", "air-entity-info-con", "light-effect", "selection-box", "arrow", "cursor"
 
 -- collision masks
--- "ground-tile", "water-tile", "resource-layer", "floor-layer", "item-layer",
--- "object-layer", "player-layer", "ghost-layer", "doodad-layer", "not-colliding-with-itself"
+-- "ground_tile", "water_tile", "resource", "floor", "item",
+-- "object", "player", "ghost", "doodad", "not-colliding-with-itself"

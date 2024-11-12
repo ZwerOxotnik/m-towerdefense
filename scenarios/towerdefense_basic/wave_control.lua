@@ -18,7 +18,7 @@ require("util")
 
 local WaveCtrl = {}
 
-global.wave_controls_all = global.wave_controls_all or {}
+storage.wave_controls_all = storage.wave_controls_all or {}
 
 
 
@@ -142,7 +142,7 @@ function WaveCtrl.destroy_ui(player)
     end
 
 
-    for _, wave_control in pairs(global.wave_controls_all) do
+    for _, wave_control in pairs(storage.wave_controls_all) do
         wave_control.players_with_ui[player.index] = nil
     end
 end
@@ -197,8 +197,8 @@ local function move_next_group(wave_control)
                 for _, lane in pairs(wave.lanes) do
                     for _, group in pairs(lane.groups) do
                         for k, ent in pairs(group.units) do
-                            if ent and ent.valid then
-                                if wave_ind < wave_control.active_wave_index or ent.has_command() or Math.distance(ent.position, wave.lanes[1].path[1]) < wave.lanes[1] then
+                            if ent.valid then
+                                if wave_ind < wave_control.active_wave_index or ent.commandable.has_command or Math.distance(ent.position, wave.lanes[1].path[1]) < wave.lanes[1] then
                                     ent.die()
                                 end
                             end
@@ -405,7 +405,7 @@ local function wave_ended(wave_control, wave_ind)
 end
 
 Event.register(-60, function()
-    for _, wave_control in pairs(global.wave_controls_all) do 
+    for _, wave_control in pairs(storage.wave_controls_all) do 
         if not wave_control.ended then
             for player_index, has_ui in pairs(wave_control.players_with_ui) do
                 if has_ui then
@@ -418,7 +418,7 @@ Event.register(-60, function()
 end)
 
 Event.register(-10, function() 
-    for _, wave_control in pairs(global.wave_controls_all) do
+    for _, wave_control in pairs(storage.wave_controls_all) do
         if not wave_control.ended then
             WaveCtrl.main(wave_control)
         end
@@ -430,7 +430,7 @@ end)
 Event.register(defines.events.on_entity_died, function(event)
     local ent = event.entity
     if ent.type == "unit" then
-        for _, wave_control in pairs(global.wave_controls_all) do
+        for _, wave_control in pairs(storage.wave_controls_all) do
             if not wave_control.ended then 
                 local unit_data = wave_control.units_by_unit_number[ent.unit_number]
                 if unit_data then
@@ -587,14 +587,14 @@ function WaveCtrl.init(params)
         buffers = {},
         players_with_ui = {},
         units_by_unit_number = {},
-        index = #global.wave_controls_all + 1
+        index = #storage.wave_controls_all + 1
     }
 
     local i = 1 
-    while global.wave_controls_all[i] do
+    while storage.wave_controls_all[i] do
         i = i + 1
     end
-    global.wave_controls_all[i] = wave_control
+    storage.wave_controls_all[i] = wave_control
 
     return wave_control
 end
@@ -632,7 +632,7 @@ function WaveCtrl.destroy(wave_control)
         WaveCtrl.destroy_ui(player)
     end
 
-    global.wave_controls_all[wave_control.index] = nil
+    storage.wave_controls_all[wave_control.index] = nil
 end
 
 
@@ -695,5 +695,5 @@ return WaveCtrl
 --         units_by_unit_number = {
 --             unit_number = {wave_key, lane_key, group_key}
 --         }
---         index -- unique identifier for wave control in global.wave_controls_all
+--         index -- unique identifier for wave control in storage.wave_controls_all
 --     }

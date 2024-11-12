@@ -58,7 +58,7 @@ GameControl.game_constants = {
     starting_inventory = {
         --["submachine-gun"] = 1,
         --["firearm-magazine"] = 20,
-        ["artillery-targeting-remote"] = 1,
+        -- ["artillery-targeting-remote"] = 1, -- TODO: recheck and fix!
         ["blueprint"] = 2,
         ["deconstruction-planner"] = 1,
         -- ["modular-armor"] = {
@@ -74,7 +74,7 @@ GameControl.game_constants = {
         ["power-armor"] = {
             type = "armor",
             equipment = {
-                "fusion-reactor-equipment",
+                "fission-reactor-equipment",
                 {name="energy-shield-equipment", count = 2},
                 {name="personal-roboport-equipment", count = 2},
                 "night-vision-equipment",
@@ -121,7 +121,7 @@ GameControl.game_constants = {
         "heavy-armor",
         "fluid-handling",
         "circuit-network",
-        "optics",
+        "lamp",
         "military-2",
         -- "railway",
         -- "automated-rail-transportation",
@@ -141,7 +141,7 @@ GameControl.game_constants = {
         "laser",
         "battery",
         "fast-inserter",
-        "stack-inserter",
+        "fast-inserter",
         "laser-turret",
         "modules",
         "modular-armor",
@@ -151,7 +151,7 @@ GameControl.game_constants = {
         -- "flammables",
         -- "flamethrower",
         "explosives",
-        "advanced-electronics",
+        "advanced-circuit",
         "inserter-capacity-bonus-1",
         "inserter-capacity-bonus-2",
         "worker-robots-speed-1",
@@ -235,7 +235,7 @@ GameControl.game_constants = {
             cost = 5,
             icon = "item/laser-turret",
             unlock = {
-                "energy-weapons-damage",
+                "laser-weapons-damage",
                 "laser-shooting-speed",
             },
             level_max = 3,
@@ -337,7 +337,7 @@ GameControl.game_constants = {
             title = "Faster Hands",
             description = "Increases handcrafting speed and mining speed by 150%",
             cost = 12,
-            icon = "item/dummy-steel-axe",
+            icon = "technology/steel-axe",
             action = function(game_control, _)
                 game_control.player_force.manual_crafting_speed_modifier = game_control.player_force.manual_crafting_speed_modifier + 1.5
                 game_control.player_force.manual_mining_speed_modifier = game_control.player_force.manual_mining_speed_modifier + 1.5
@@ -404,7 +404,7 @@ GameControl.game_constants = {
 
     loot = {
         medium = {
-            entities = {"medium-ship-wreck"},
+            entities = {"crash-site-spaceship-wreck-medium-1"}, -- TODO: recheck
             items = {
                 ["express-transport-belt"] = 100,
                 ["express-underground-belt"] = 50,
@@ -412,7 +412,7 @@ GameControl.game_constants = {
             }
         },
         large = {
-            entities = {"big-ship-wreck-1", "big-ship-wreck-2", "big-ship-wreck-3"},
+            entities = {"crash-site-spaceship-wreck-small-1", "crash-site-spaceship-wreck-small-2", "crash-site-spaceship-wreck-small-3"}, -- TODO: recheck
             items = {
                 ["atomic-bomb"] = 2,
                 ["artillery-shell"] = 4,
@@ -458,7 +458,7 @@ function GameControl.adjust_game_constants(game_control, difficulty_settings)
             elseif upgrade.name == "artillery-shell" then
                 upgrades[k] = nil
                 game_constants.hints[3] = "There is no friendly fire: You cannot hurt allied buildings."
-                game_constants.starting_inventory["artillery-targeting-remote"] = nil
+                -- game_constants.starting_inventory["artillery-targeting-remote"] = nil  -- TODO: recheck and fix!
                 game_constants.loot.large.items = {["atomic-bomb"] = 2}
             end
         end
@@ -474,7 +474,7 @@ local function make_wave(game_control, unit_str, duration, size)
     if not duration then duration = game_control.game_constants.wave_duration end
 
     local wave = {
-        lanes = {global.game_control.lane1, global.game_control.lane2},
+        lanes = {storage.game_control.lane1, storage.game_control.lane2},
         group_size = size or 15,
         group_time_factor = 15,
         unit = {unit_str, 30},
@@ -572,7 +572,7 @@ end
 function GameControl.reset_enemy_force(game_control)
     local force = game_control.enemy_force
     force.reset()
-    force.evolution_factor = 0.6
+    force.set_evolution_factor(0.6)
     --game_control.surface.peaceful_mode = true
     force.set_cease_fire(game_control.wave_force, true)
     force.set_cease_fire(game_control.ally_force, false)
@@ -641,7 +641,7 @@ function GameControl.reset_surface(game_control)
     end
 
 
-    if not global.system.saved_entities then
+    if not storage.system.saved_entities then
         -- Remove position markers
         for _, ent in pairs(surface.find_entities_filtered{name="centrifuge"}) do 
             ent.destroy()
@@ -654,7 +654,7 @@ function GameControl.reset_surface(game_control)
 
 
         -- Save entities for next game
-        global.system.saved_entities = {}
+        storage.system.saved_entities = {}
         local attributes = {"position", "orientation", "direction", "health", }
         local entity_attributes = {["resource"] = {"amount"}, ["assembling-machine"] = {"recipe"}, ["underground-belt"] = {"type"}, ["train-stop"] = {"backer_name"}, ["radar"] = {"backer_name"}}
 
@@ -671,7 +671,7 @@ function GameControl.reset_surface(game_control)
                     for _, attrib in pairs(entity_attributes[entity_type] or {}) do
                         saved_entity[attrib] = ent[attrib]
                     end
-                    table.insert(global.system.saved_entities, saved_entity)
+                    table.insert(storage.system.saved_entities, saved_entity)
                     -- Activate entities that were set inactive for editing
                     if not ent.active then
                         ent.active = true
@@ -694,11 +694,11 @@ function GameControl.reset_surface(game_control)
             end
         end
         local create = surface.create_entity
-        for _, ent in pairs(global.system.saved_entities) do
+        for _, ent in pairs(storage.system.saved_entities) do
             local new = create(ent)
             if ent.turret_ammo then
-                for name, count in pairs(ent.turret_ammo) do
-                    new.insert{name=name, count=count}
+                for _, item in pairs(ent.turret_ammo) do
+                    new.insert{name=item.name, count=item.count}
                 end
             elseif ent.backer_name then
                 new.backer_name = ent.backer_name
@@ -760,7 +760,7 @@ end
 
 -- Game Start and End
 
--- global.game_control = {
+-- storage.game_control = {
 --     player_force,
 --     enemy_force,
 --     wave_force,
@@ -849,9 +849,9 @@ end
 
 
 function GameControl.destroy_game()
-    local game_control = global.game_control
+    local game_control = storage.game_control
     -- local lobby_pos_index = math.random(#scenario_constants.lobby_positions)
-    -- global.system.lobby_position_index = math.random(#scenario_constants.lobby_positions)
+    -- storage.system.lobby_position_index = math.random(#scenario_constants.lobby_positions)
     -- for _, player in pairs(game_control.player_force.players) do
     --     move_to_lobby(player, lobby_pos_index)
     -- end
@@ -859,14 +859,14 @@ function GameControl.destroy_game()
     if not game_control then return end
     UpgradeSystem.destroy(game_control.player_force)
     WaveCtrl.destroy(game_control.wave_control)
-    global.game_control = nil
+    storage.game_control = nil
 end
 
 
 
 Event.register(defines.events.on_entity_died, function(event)
     local entity = event.entity
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if not game_control or game_control.ended then return end
 
     -- Game End
@@ -891,15 +891,15 @@ Event.register(defines.events.on_entity_died, function(event)
         game_control.player_force.play_sound{path="utility/game_lost", }
         
         -- event.cause entity is available, do something with it?
-    elseif entity.type == "unit-spawner" and global.game_control and entity.force.name == global.game_control.enemy_force.name then 
-        UpgradeSystem.give_money(global.game_control.player_force, game_control.game_constants.spawner_money, global.game_control.surface, {event.entity.position})
+    elseif entity.type == "unit-spawner" and storage.game_control and entity.force.name == storage.game_control.enemy_force.name then 
+        UpgradeSystem.give_money(storage.game_control.player_force, game_control.game_constants.spawner_money, storage.game_control.surface, {event.entity.position})
     end
 end)
 
 
 Event.register(defines.events.on_player_joined_game, function(event)
     local player = game.players[event.player_index]
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if game_control then
         GameControl.player_enter_game(game_control, player)
     end
@@ -909,7 +909,7 @@ end)
 -- Forbid player to build on lanes
 Event.register(defines.events.on_pre_build, function(event)
     local player = game.players[event.player_index]
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if not game_control or game_control.ended then return end
     if not game_control.lane_marker_surface then return end
     if game_control.lane_marker_surface.get_tile(event.position.x, event.position.y).name == "out-of-map" then
@@ -929,14 +929,14 @@ Event.register(defines.events.on_pre_build, function(event)
     end
 end)
 Event.register(defines.events.on_built_entity, function(event)
-    local entity = event.created_entity
+    local entity = event.entity
     local player = game.players[event.player_index]    
     local position = entity.position
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if not game_control or game_control.ended then return end
     if not game_control.lane_marker_surface then return end
     if game_control.lane_marker_surface.get_tile(position.x, position.y).name == "out-of-map" then
-        if game.item_prototypes[entity.name] then
+        if prototypes.item[entity.name] then
             player.insert{name=entity.name, count=1}
         end
         entity.destroy()
@@ -953,7 +953,7 @@ end)
 
 -- Alert players to Wave Start
 Event.register(WaveCtrl.on_wave_starting, function(event)
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if event.wave_index > 0 then
         game_control.player_force.play_sound{path="utility/new_objective", }        
         game_control.player_force.print("Wave " .. event.wave_index .. " has started.")
@@ -966,7 +966,7 @@ end)
 
 -- Alert players to attacks on silo.
 Event.register(-5*60, function()
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if game_control and not game_control.ended then
         if game_control.rocket_silo_health and game_control.rocket_silo_health > game_control.rocket_silo.health then
             game_control.player_force.play_sound{path="utility/scenario_message"}
@@ -977,7 +977,7 @@ end)
 
 -- Wave Ended
 Event.register(WaveCtrl.on_wave_destroyed, function(event)
-    local game_control = global.game_control
+    local game_control = storage.game_control
     if event.game_ended then
         -- Win
         GameControl.end_game(game_control, true)
@@ -990,7 +990,7 @@ Event.register(WaveCtrl.on_wave_destroyed, function(event)
         game_control.player_force.play_sound{path="utility/game_won", }
         game_control.player_force.print("You win! Congratulations!")
     else
-        UpgradeSystem.give_money(global.game_control.player_force, game_control.game_constants.wave_money)
+        UpgradeSystem.give_money(storage.game_control.player_force, game_control.game_constants.wave_money)
         
         for _, player in pairs(game_control.player_force.players) do
             mod_gui.get_frame_flow(player).wave_frame.hint_label.caption = game_control.game_constants.hints[game_control.wave_control.spawning_wave_index] or ""

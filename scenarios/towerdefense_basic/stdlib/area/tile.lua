@@ -25,7 +25,7 @@ Tile.to_area = Position.expand_to_tile_area
 -- @tparam LuaSurface surface the surface to examine for adjacent tiles
 -- @tparam LuaTile.position position the tile position of the origin tile
 -- @tparam[opt=false] boolean diagonal whether to include diagonal tiles
--- @tparam[opt] string tile_name whether to restrict adjacent tiles to a particular tile name (example: "water-tile")
+-- @tparam[opt] string tile_name whether to restrict adjacent tiles to a particular tile name (example: "water_tile")
 -- @treturn {LuaTile.position,...} an array of tile positions of the tiles that are adjacent to the origin tile
 function Tile.adjacent(surface, position, diagonal, tile_name)
     Is.Assert(surface, 'missing surface argument')

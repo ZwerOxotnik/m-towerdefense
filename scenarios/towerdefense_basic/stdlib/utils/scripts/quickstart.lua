@@ -68,12 +68,12 @@ function quickstart.on_player_created(event)
 
         if inv then
             for _, item in pairs(simple_stacks) do
-                if game.item_prototypes[item] then
+                if prototypes.item[item] then
                     inv.insert(item)
                 end
             end
             for _, item in pairs(qb_stacks) do
-                if game.item_prototypes[item] then
+                if prototypes.item[item] then
                     qb.insert(item)
                 end
             end
@@ -82,9 +82,9 @@ function quickstart.on_player_created(event)
         local tool_inv = player.get_inventory(defines.inventory.player_tools)
         if tool_inv then
             local tool = QS.get('tool', 'steel-axe')
-            if not game.item_prototypes[tool] then
+            if not prototypes.item[tool] then
                 tool = 'steel-axe'
-                if not game.item_prototypes[tool] then
+                if not prototypes.item[tool] then
                     tool = nil
                 end
             end
@@ -94,13 +94,13 @@ function quickstart.on_player_created(event)
         end
 
         local power_armor = QS.get('power_armor', 'fake')
-        if player.character and game.item_prototypes[power_armor] then
+        if player.character and prototypes.item[power_armor] then
             --Put on power armor, install equipment
             player.get_inventory(defines.inventory.character_armor).insert(power_armor)
             local grid = player.character.grid
             if grid then
-                for _, eq in pairs(QS.get('equipment', {'fusion-reactor-equipment'})) do
-                    if game.equipment_prototypes[eq] then
+                for _, eq in pairs(QS.get('equipment', {'fission-reactor-equipment'})) do
+                    if prototypes.equipment[eq] then
                         grid.put {name = eq}
                     end
                 end
@@ -189,7 +189,7 @@ function quickstart.on_player_created(event)
         end
 
         if QS.get('chunk_bounds', false) then
-            if game.entity_prototypes['debug-chunk-marker'] then
+            if prototypes.entity['debug-chunk-marker'] then
                 local a = surface.create_entity {name = 'debug-chunk-marker', position = {0, 0}}
                 a.graphics_variation = 1
                 for i = 1, 31, 2 do
@@ -268,12 +268,12 @@ function quickstart.on_player_created(event)
         end
 
         if QS.get('setup_power', false) then
-            if game.entity_prototypes['debug-energy-interface'] then
+            if prototypes.entity['debug-energy-interface'] then
                 local es = surface.create_entity {name = 'debug-energy-interface', position = {0, 0}, force = force}
                 es.destructible = false
                 script.raise_event(defines.events.on_built_entity, {created_entity = es, player_index = player.index})
             end
-            if game.entity_prototypes['debug-substation'] then
+            if prototypes.entity['debug-substation'] then
                 local sb = surface.create_entity {name = 'debug-substation', position = {0, 0}, force = force}
                 sb.destructible = false
                 script.raise_event(defines.events.on_built_entity, {created_entity = sb, player_index = player.index})
